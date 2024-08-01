@@ -1,0 +1,51 @@
+# For more information, see the Configuration Guide:
+# https://docs.librechat.ai/install/configuration/custom_config.html
+
+# Configuration version (required)
+version: 1.0.5
+# This setting caches the config file for faster loading across app lifecycle
+cache: true
+endpoints:
+  custom:
+    - name: "Mistral"
+      apiKey: "${MISTRAL_API_KEY}"
+      baseURL: "https://api.mistral.ai/v1"
+      models:
+        default: ["mistral-large-latest", "open-mistral-nemo", "codestral-latest", "open-mistral-7b", "open-mixtral-8x7b", "open-mixtral-8x22b", "open-codestral-mamba"]
+        fetch: true
+      titleConvo: true
+      titleModel: "open-mistral-7b"
+      modelDisplayLabel: "Mistral"
+      dropParams: ["stop", "user", "frequency_penalty", "presence_penalty"]
+    - name: "groq"
+      apiKey: "${GROQ_API_KEY}"
+      baseURL: "https://api.groq.com/openai/v1/models"
+      models:
+        default: ["llama3-groq-70b-8192-tool-use-preview", "llama3-groq-8b-8192-tool-use-preview", "llama3-70b-8192", "llama3-8b-8192", "llama2-70b-409", "mixtral-8x7b-32768", "gemma-7b-it",]
+        fetch: true
+      titleConvo: true
+      titleModel: "mixtral-8x7b-32768"
+      modelDisplayLabel: "groq"
+  azureOpenAI:
+# Endpoint-level configuration
+    titleModel: "Meta-Llama-3.1-8B-Instruct"
+    groups:
+# serverless examples
+    - group: "llama-31-405B-chat"
+      apiKey: "${LLAMA405_API_KEY}"
+      baseURL: "https://Llama-31-405B-Instruct-librechat.eastus.models.ai.azure.com/v1/chat/completions"
+      serverless: true
+      models:
+        Meta-Llama-3.1-405B-Instruct: true
+    - group: "llama-31-70B-chat"
+      apiKey: "${LLAMA70_API_KEY}"
+      baseURL: "https://Llama-31-70B-Instruct-Librechat.eastus.models.ai.azure.com/v1/chat/completions"
+      serverless: true
+      models:
+        Meta-Llama-3.1-70B-Instruct: true
+    - group: "llama-31-8B-chat"
+      apiKey: "${LLAMA8_API_KEY}"
+      baseURL: "https://Llama-31-8B-Instruct-LibreChat.eastus.models.ai.azure.com/v1/chat/completions"
+      serverless: true
+      models:
+        Meta-Llama-3.1-8B-Instruct: true
