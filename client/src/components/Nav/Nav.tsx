@@ -83,13 +83,13 @@ const Nav = memo(
     const [isChatsExpanded, setIsChatsExpanded] = useLocalStorage('chatsExpanded', true);
     const [showLoading, setShowLoading] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
+    const search = useRecoilValue(store.search);
+    const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
     const hasAccessToBookmarks = useHasAccess({
       permissionType: PermissionTypes.BOOKMARKS,
       permission: Permissions.USE,
     });
-
-    const search = useRecoilValue(store.search);
 
     const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching, refetch } =
       useConversationsInfiniteQuery(
@@ -133,8 +133,6 @@ const Nav = memo(
     }, [data]);
 
     const toggleNavVisible = useCallback(() => {
-      // Use startTransition to mark this as a non-urgent update
-      // This prevents blocking the main thread during the cascade of re-renders
       startTransition(() => {
         setNavVisible((prev: boolean) => {
           localStorage.setItem('navVisible', JSON.stringify(!prev));
@@ -213,17 +211,19 @@ const Nav = memo(
       }
     }, [search.query, search.isTyping, isLoading, isFetching]);
 
-    // Always render sidebar to avoid mount/unmount costs
-    // Use transform for GPU-accelerated animation (no layout thrashing)
     const sidebarWidth = isSmallScreen ? NAV_WIDTH.MOBILE : NAV_WIDTH.DESKTOP;
 
-    // Sidebar content (shared between mobile and desktop)
     const sidebarContent = (
-      <div className="flex h-full flex-col">
+      <div
+        className={cn('flex h-full flex-col', chatLayoutStyle === 'claude' && 'chat-sidebar-shell')}
+      >
         <nav
           id="chat-history-nav"
           aria-label={localize('com_ui_chat_history')}
-          className="flex h-full flex-col px-2 pb-3.5"
+          className={cn(
+            'flex h-full flex-col px-2 pb-3.5',
+            chatLayoutStyle === 'claude' && 'chat-sidebar-nav',
+          )}
           aria-hidden={!navVisible}
         >
           <div className="flex flex-1 flex-col overflow-hidden" ref={outerContainerRef}>
@@ -254,8 +254,6 @@ const Nav = memo(
       </div>
     );
 
-    // Mobile: Fixed positioned sidebar that slides over content
-    // Uses CSS transitions (not Framer Motion) to sync perfectly with content animation
     if (isSmallScreen) {
       return (
         <>
@@ -264,6 +262,7 @@ const Nav = memo(
             className={cn(
               'nav fixed left-0 top-0 z-[110] h-full bg-surface-primary-alt',
               navVisible && 'active',
+              chatLayoutStyle === 'claude' && 'chat-sidebar-drawer',
             )}
             style={{
               width: sidebarWidth,
@@ -278,7 +277,6 @@ const Nav = memo(
       );
     }
 
-    // Desktop: Inline sidebar with width transition
     return (
       <div
         className="flex-shrink-0 overflow-hidden"
@@ -286,7 +284,11 @@ const Nav = memo(
       >
         <motion.div
           data-testid="nav"
-          className={cn('nav h-full bg-surface-primary-alt', navVisible && 'active')}
+          className={cn(
+            'nav h-full bg-surface-primary-alt',
+            navVisible && 'active',
+            chatLayoutStyle === 'claude' && 'chat-sidebar-drawer',
+          )}
           style={{ width: sidebarWidth }}
           initial={false}
           animate={{

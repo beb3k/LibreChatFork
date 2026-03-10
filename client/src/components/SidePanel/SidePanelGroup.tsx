@@ -46,18 +46,18 @@ const SidePanelGroup = memo(
 
     const isSmallScreen = useMediaQuery('(max-width: 767px)');
     const hideSidePanel = useRecoilValue(store.hideSidePanel);
+    const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
         const navSize = defaultLayout.length === 2 ? defaultLayout[1] : defaultLayout[2];
         return [100 - navSize, navSize];
-      } else {
-        const navSize = 0;
-        const remainingSpace = 100 - navSize;
-        const newMainSize = Math.floor(remainingSpace / 2);
-        const artifactsSize = remainingSpace - newMainSize;
-        return [newMainSize, artifactsSize, navSize];
       }
+      const navSize = 0;
+      const remainingSpace = 100 - navSize;
+      const newMainSize = Math.floor(remainingSpace / 2);
+      const artifactsSize = remainingSpace - newMainSize;
+      return [newMainSize, artifactsSize, navSize];
     }, [artifacts, defaultLayout]);
 
     const currentLayout = useMemo(() => normalizeLayout(calculateLayout()), [calculateLayout]);
@@ -80,16 +80,14 @@ const SidePanelGroup = memo(
         localStorage.setItem('fullPanelCollapse', 'true');
         panelRef.current?.collapse();
         return;
-      } else {
-        setIsCollapsed(defaultCollapsed);
-        setCollapsedSize(navCollapsedSize);
-        setMinSize(defaultMinSize);
       }
+      setIsCollapsed(defaultCollapsed);
+      setCollapsedSize(navCollapsedSize);
+      setMinSize(defaultMinSize);
     }, [isSmallScreen, defaultCollapsed, navCollapsedSize, fullPanelCollapse]);
 
     const minSizeMain = useMemo(() => (artifacts != null ? 15 : 30), [artifacts]);
 
-    /** Memoized close button handler to prevent re-creating it */
     const handleClosePanel = useCallback(() => {
       setIsCollapsed(() => {
         localStorage.setItem('fullPanelCollapse', 'true');
@@ -106,7 +104,10 @@ const SidePanelGroup = memo(
         <ResizablePanelGroup
           direction="horizontal"
           onLayout={(sizes) => throttledSaveLayout(sizes)}
-          className="relative h-full w-full flex-1 overflow-auto bg-presentation"
+          className={cn(
+            'relative h-full w-full flex-1 overflow-auto bg-presentation',
+            chatLayoutStyle === 'claude' && 'chat-side-panel-group',
+          )}
         >
           <ResizablePanel
             defaultSize={currentLayout[0]}
@@ -144,9 +145,7 @@ const SidePanelGroup = memo(
             />
           )}
         </ResizablePanelGroup>
-        {artifacts != null && isSmallScreen && (
-          <div className="fixed inset-0 z-[100]">{artifacts}</div>
-        )}
+        {artifacts != null && isSmallScreen && <div className="fixed inset-0 z-[100]">{artifacts}</div>}
         {!hideSidePanel && interfaceConfig.sidePanel === true && (
           <button
             onClick={handleClosePanel}

@@ -3,6 +3,8 @@ import { SettingsViews, LocalStorageKeys } from 'librechat-data-provider';
 import { atomWithLocalStorage } from '~/store/utils';
 import type { TOptionSettings } from '~/common';
 
+export type ChatLayoutStyle = 'classic' | 'claude';
+
 // Static atoms without localStorage
 const staticAtoms = {
   abortScroll: atom<boolean>({ key: 'abortScroll', default: false }),
@@ -27,6 +29,7 @@ const localStorageAtoms = {
   // Chat settings
   enterToSend: atomWithLocalStorage('enterToSend', true),
   maximizeChatSpace: atomWithLocalStorage('maximizeChatSpace', false),
+  chatLayoutStyle: atomWithLocalStorage<ChatLayoutStyle>('chatLayoutStyle', 'classic'),
   chatDirection: atomWithLocalStorage('chatDirection', 'LTR'),
   showCode: atomWithLocalStorage(LocalStorageKeys.SHOW_ANALYSIS_CODE, true),
   saveDrafts: atomWithLocalStorage('saveDrafts', true),

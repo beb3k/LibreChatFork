@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { showThinkingAtom } from '~/store/showThinking';
+import ChatLayoutSelector from './ChatLayoutSelector';
 import FontSizeSelector from './FontSizeSelector';
 import { ForkSettings } from './ForkSettings';
 import ChatDirection from './ChatDirection';
@@ -91,6 +92,9 @@ function Chat() {
     <div className="flex flex-col gap-3 p-1 text-sm text-text-primary">
       <div className="pb-3">
         <FontSizeSelector />
+      </div>
+      <div className="pb-3">
+        <ChatLayoutSelector />
       </div>
       <div className="pb-3">
         <ChatDirection />

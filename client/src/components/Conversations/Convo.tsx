@@ -36,6 +36,7 @@ export default function Conversation({
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
   const updateConvoMutation = useUpdateConversationMutation(currentConvoId ?? '');
   const activeConvos = useRecoilValue(store.allConversationsSelector);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const isShiftHeld = useShiftKey();
   const { conversationId, title = '' } = conversation;
@@ -43,7 +44,6 @@ export default function Conversation({
   const [titleInput, setTitleInput] = useState(title || '');
   const [renaming, setRenaming] = useState(false);
   const [isPopoverActive, setIsPopoverActive] = useState(false);
-  // Lazy-load ConvoOptions to avoid running heavy hooks for all conversations
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const previousTitle = useRef(title);
@@ -63,10 +63,10 @@ export default function Conversation({
 
     if (currentConvoId !== Constants.NEW_CONVO) {
       return currentConvoId === conversationId;
-    } else {
-      const latestConvo = activeConvos?.[0];
-      return latestConvo === conversationId;
     }
+
+    const latestConvo = activeConvos?.[0];
+    return latestConvo === conversationId;
   }, [currentConvoId, conversationId, activeConvos]);
 
   const handleRename = () => {
@@ -118,7 +118,6 @@ export default function Conversation({
 
   const handleBlur = useCallback(
     (e: React.FocusEvent<HTMLDivElement>) => {
-      // Don't reset if focus is moving to a child element within this container
       if (e.currentTarget.contains(e.relatedTarget as Node)) {
         return;
       }
@@ -181,7 +180,8 @@ export default function Conversation({
     <div
       ref={containerRef}
       className={cn(
-        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-9',
+        'group relative flex h-12 w-full items-center rounded-lg outline-none transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-9',
+        chatLayoutStyle === 'claude' && 'chat-convo-item',
         isActiveConvo || isPopoverActive
           ? 'bg-surface-active-alt before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:rounded-full before:bg-black dark:before:bg-white'
           : 'hover:bg-surface-active-alt',
@@ -217,6 +217,7 @@ export default function Conversation({
       }}
       style={{ cursor: renaming ? 'default' : 'pointer' }}
       data-testid="convo-item"
+      data-convo-active={isActiveConvo}
     >
       {renaming ? (
         <RenameForm
@@ -274,11 +275,7 @@ export default function Conversation({
             : 'pointer-events-none max-w-0 scale-x-0 opacity-0 group-focus-within:pointer-events-auto group-focus-within:max-w-[60px] group-focus-within:scale-x-100 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:max-w-[60px] group-hover:scale-x-100 group-hover:opacity-100',
           !isPopoverActive && isActiveConvo && isShiftHeld ? 'max-w-[60px]' : 'max-w-[28px]',
         )}
-        // Removing aria-hidden to fix accessibility issue: ARIA hidden element must not be focusable or contain focusable elements
-        // but not sure what its original purpose was, so leaving the property commented out until it can be cleared safe to delete.
-        // aria-hidden={!(isPopoverActive || isActiveConvo)}
       >
-        {/* Only render ConvoOptions when user interacts (hover/focus) or for active conversation */}
         {!renaming && (hasInteracted || isActiveConvo) && <ConvoOptions {...convoOptionsProps} />}
       </div>
     </div>

@@ -58,6 +58,7 @@ const ContentRender = memo(
     });
     const fontSize = useAtomValue(fontSizeAtom);
     const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
+    const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
     const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
     const isLast = useMemo(
@@ -67,7 +68,6 @@ const ContentRender = memo(
     );
     const hasNoChildren = !(msg?.children?.length ?? 0);
     const isLatestMessage = msg?.messageId === latestMessage?.messageId;
-    /** Only pass isSubmitting to the latest message to prevent unnecessary re-renders */
     const effectiveIsSubmitting = isLatestMessage ? isSubmitting : false;
 
     const iconData: TMessageIcon = useMemo(
@@ -96,6 +96,9 @@ const ContentRender = memo(
     }
 
     const getChatWidthClass = () => {
+      if (chatLayoutStyle === 'claude' && !hasParallelContent) {
+        return 'max-w-[48rem] px-4 md:px-0';
+      }
       if (maximizeChatSpace) {
         return 'w-full max-w-full md:px-5 lg:px-1 xl:px-5';
       }
@@ -105,28 +108,19 @@ const ContentRender = memo(
       return 'md:max-w-[47rem] xl:max-w-[55rem]';
     };
 
-    const baseClasses = {
-      common: 'group mx-auto flex flex-1 gap-3 transition-all duration-300 transform-gpu ',
-      chat: getChatWidthClass(),
-    };
-
-    const conditionalClasses = {
-      focus: 'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
-    };
-
     return (
       <div
         id={msg.messageId}
         aria-label={getMessageAriaLabel(msg, localize)}
         className={cn(
-          baseClasses.common,
-          baseClasses.chat,
-          conditionalClasses.focus,
-          'message-render',
+          'message-render group mx-auto flex flex-1 gap-3 transition-all duration-200',
+          getChatWidthClass(),
+          'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
+          chatLayoutStyle === 'claude' && 'chat-message-row',
         )}
       >
         {!hasParallelContent && (
-          <div className="relative flex flex-shrink-0 flex-col items-center">
+          <div className="relative flex flex-shrink-0 flex-col items-center" data-message-avatar>
             <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full">
               <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
             </div>
@@ -139,9 +133,13 @@ const ContentRender = memo(
             hasParallelContent ? 'w-full' : 'w-11/12',
             msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
           )}
+          data-message-body
+          data-message-role={msg.isCreatedByUser ? 'user' : 'assistant'}
         >
           {!hasParallelContent && (
-            <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
+            <h2 className={cn('select-none font-semibold', fontSize)} data-message-title>
+              {messageLabel}
+            </h2>
           )}
 
           <div className="flex flex-col gap-1">

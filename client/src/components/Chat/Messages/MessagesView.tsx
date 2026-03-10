@@ -20,6 +20,7 @@ function MessagesViewContent({
   const fontSize = useAtomValue(fontSizeAtom);
   const { screenshotTargetRef } = useScreenshot();
   const scrollButtonPreference = useRecoilValue(store.showScrollButton);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const [currentEditId, setCurrentEditId] = useState<number | string | null>(-1);
   const scrollToBottomRef = useRef<HTMLButtonElement>(null);
 
@@ -48,7 +49,13 @@ function MessagesViewContent({
               width: '100%',
             }}
           >
-            <div className="flex flex-col pb-9 pt-14 dark:bg-transparent">
+            <div
+              className={cn(
+                'flex flex-col pb-9 pt-14 dark:bg-transparent',
+                chatLayoutStyle === 'claude' && 'chat-messages-shell',
+              )}
+              data-chat-messages={chatLayoutStyle}
+            >
               {(_messagesTree && _messagesTree.length == 0) || _messagesTree === null ? (
                 <div
                   className={cn(
@@ -59,23 +66,17 @@ function MessagesViewContent({
                   {localize('com_ui_nothing_found')}
                 </div>
               ) : (
-                <>
-                  <div ref={screenshotTargetRef}>
-                    <MultiMessage
-                      key={conversationId}
-                      messagesTree={_messagesTree}
-                      messageId={conversationId ?? null}
-                      setCurrentEditId={setCurrentEditId}
-                      currentEditId={currentEditId ?? null}
-                    />
-                  </div>
-                </>
+                <div ref={screenshotTargetRef} className="w-full">
+                  <MultiMessage
+                    key={conversationId}
+                    messagesTree={_messagesTree}
+                    messageId={conversationId ?? null}
+                    setCurrentEditId={setCurrentEditId}
+                    currentEditId={currentEditId ?? null}
+                  />
+                </div>
               )}
-              <div
-                id="messages-end"
-                className="group h-0 w-full flex-shrink-0"
-                ref={messagesEndRef}
-              />
+              <div id="messages-end" className="group h-0 w-full flex-shrink-0" ref={messagesEndRef} />
             </div>
           </div>
 

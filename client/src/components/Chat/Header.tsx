@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
 import { useMediaQuery } from '@librechat/client';
 import { useOutletContext } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,12 +14,14 @@ import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
 import { useHasAccess } from '~/hooks';
 import { cn } from '~/utils';
+import store from '~/store';
 
 const defaultInterface = getConfigDefaults().interface;
 
 export default function Header() {
   const { data: startupConfig } = useGetStartupConfig();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
   const interfaceConfig = useMemo(
     () => startupConfig?.interface ?? defaultInterface,
@@ -38,7 +41,15 @@ export default function Header() {
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   return (
-    <div className="via-presentation/70 md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 absolute top-0 z-10 flex h-14 w-full items-center justify-between bg-gradient-to-b from-presentation to-transparent p-2 font-semibold text-text-primary 2xl:via-transparent">
+    <div
+      className={cn(
+        'absolute top-0 z-10 flex w-full items-center justify-between p-2 font-semibold text-text-primary',
+        chatLayoutStyle === 'claude'
+          ? 'h-12 bg-gradient-to-b from-presentation via-presentation/85 to-transparent'
+          : 'via-presentation/70 h-14 bg-gradient-to-b from-presentation to-transparent md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 2xl:via-transparent',
+      )}
+      data-chat-header={chatLayoutStyle}
+    >
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
           <AnimatePresence initial={false}>
@@ -62,6 +73,7 @@ export default function Header() {
                 'flex items-center gap-2',
                 !isSmallScreen ? 'transition-all duration-200 ease-in-out' : '',
                 !navVisible && !isSmallScreen ? 'pl-2' : '',
+                chatLayoutStyle === 'claude' && 'gap-1.5',
               )}
             >
               <ModelSelector startupConfig={startupConfig} />
@@ -81,7 +93,7 @@ export default function Header() {
         </div>
 
         {!isSmallScreen && (
-          <div className="flex items-center gap-2">
+          <div className={cn('flex items-center gap-2', chatLayoutStyle === 'claude' && 'gap-1.5')}>
             <ExportAndShareMenu
               isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
             />
@@ -89,7 +101,6 @@ export default function Header() {
           </div>
         )}
       </div>
-      {/* Empty div for spacing */}
       <div />
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, memo } from 'react';
+import { useRecoilValue } from 'recoil';
 import { getEndpointField } from 'librechat-data-provider';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
 import { ResizableHandleAlt, ResizablePanel, useMediaQuery } from '@librechat/client';
@@ -11,6 +12,7 @@ import NavToggle from '~/components/Nav/NavToggle';
 import { useSidePanelContext } from '~/Providers';
 import { cn } from '~/utils';
 import Nav from './Nav';
+import store from '~/store';
 
 const defaultMinSize = 20;
 
@@ -48,6 +50,7 @@ const SidePanel = ({
   const [isHovering, setIsHovering] = useState(false);
   const [newUser, setNewUser] = useLocalStorage('newUser', true);
   const { data: endpointsConfig = {} as TEndpointsConfig } = useGetEndpointsQuery();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
   const isSmallScreen = useMediaQuery('(max-width: 767px)');
 
@@ -133,7 +136,7 @@ const SidePanel = ({
           onToggle={toggleNavVisible}
           setIsHovering={setIsHovering}
           className={cn(
-            'fixed top-1/2',
+            'fixed top-1/2 transition-all duration-200',
             (isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
               ? 'mr-9'
               : 'mr-16',
@@ -155,7 +158,7 @@ const SidePanel = ({
         defaultSize={defaultSize}
         collapsible={true}
         minSize={minSize}
-        maxSize={40}
+        maxSize={chatLayoutStyle === 'claude' ? 32 : 40}
         ref={panelRef}
         style={{
           overflowY: 'auto',
@@ -173,11 +176,16 @@ const SidePanel = ({
           localStorage.setItem('react-resizable-panels:collapsed', 'true');
         }}
         className={cn(
-          'sidenav hide-scrollbar border-l border-border-light bg-background py-1 transition-opacity',
-          isCollapsed ? 'min-w-[50px]' : 'min-w-[340px] sm:min-w-[352px]',
+          'sidenav hide-scrollbar border-l border-border-light bg-background py-1 transition-opacity duration-200',
+          isCollapsed
+            ? 'min-w-[50px]'
+            : chatLayoutStyle === 'claude'
+              ? 'min-w-[300px] sm:min-w-[320px]'
+              : 'min-w-[340px] sm:min-w-[352px]',
           (isSmallScreen && isCollapsed && (minSize === 0 || collapsedSize === 0)) || fullCollapse
             ? 'hidden min-w-0'
             : 'opacity-100',
+          chatLayoutStyle === 'claude' && 'chat-side-panel',
         )}
       >
         <Nav

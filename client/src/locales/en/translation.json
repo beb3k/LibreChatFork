@@ -474,6 +474,10 @@
   "com_nav_font_size_base": "Medium",
   "com_nav_font_size_lg": "Large",
   "com_nav_font_size_sm": "Small",
+  "com_nav_chat_layout_style": "Chat Layout",
+  "com_nav_chat_layout_style_classic": "Classic",
+  "com_nav_chat_layout_style_claude": "Claude",
+  "com_nav_chat_layout_style_desc": "Switch between the default LibreChat layout and a warmer Claude-style reading mode.",
   "com_nav_font_size_xl": "Extra Large",
   "com_nav_font_size_xs": "Extra Small",
   "com_nav_help_faq": "Help & FAQ",
@@ -1519,3 +1523,4 @@
   "com_ui_zoom_out": "Zoom out",
   "com_user_message": "You"
 }
+

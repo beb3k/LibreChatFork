@@ -8,11 +8,13 @@ import { EditorProvider, SidePanelProvider, ArtifactsProvider } from '~/Provider
 import Artifacts from '~/components/Artifacts/Artifacts';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { useSetFilesToDelete } from '~/hooks';
+import { cn } from '~/utils';
 import store from '~/store';
 
 export default function Presentation({ children }: { children: React.ReactNode }) {
   const artifacts = useRecoilValue(store.artifactsState);
   const artifactsVisibility = useRecoilValue(store.artifactsVisibility);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
   const setFilesToDelete = useSetFilesToDelete();
 
@@ -57,10 +59,6 @@ export default function Presentation({ children }: { children: React.ReactNode }
   }, []);
   const fullCollapse = useMemo(() => localStorage.getItem('fullPanelCollapse') === 'true', []);
 
-  /**
-   * Memoize artifacts JSX to prevent recreating it on every render
-   * This is critical for performance - prevents entire artifact tree from re-rendering
-   */
   const artifactsElement = useMemo(() => {
     if (artifactsVisibility === true && Object.keys(artifacts ?? {}).length > 0) {
       return (
@@ -75,7 +73,12 @@ export default function Presentation({ children }: { children: React.ReactNode }
   }, [artifactsVisibility, artifacts]);
 
   return (
-    <DragDropWrapper className="relative flex w-full grow overflow-hidden bg-presentation">
+    <DragDropWrapper
+      className={cn(
+        'relative flex w-full grow overflow-hidden bg-presentation',
+        chatLayoutStyle === 'claude' && 'chat-presentation-shell',
+      )}
+    >
       <SidePanelProvider>
         <SidePanelGroup
           defaultLayout={defaultLayout}
@@ -83,7 +86,13 @@ export default function Presentation({ children }: { children: React.ReactNode }
           defaultCollapsed={defaultCollapsed}
           artifacts={artifactsElement}
         >
-          <main className="flex h-full flex-col overflow-y-auto" role="main">
+          <main
+            className={cn(
+              'flex h-full flex-col overflow-y-auto',
+              chatLayoutStyle === 'claude' && 'chat-presentation-main',
+            )}
+            role="main"
+          >
             {children}
           </main>
         </SidePanelGroup>

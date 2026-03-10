@@ -43,18 +43,15 @@ interface MeasuredRowProps {
   children: React.ReactNode;
 }
 
-/** Reusable wrapper for virtualized row measurement */
-const MeasuredRow: FC<MeasuredRowProps> = memo(
-  ({ cache, rowKey, parent, index, style, children }) => (
-    <CellMeasurer cache={cache} columnIndex={0} key={rowKey} parent={parent} rowIndex={index}>
-      {({ registerChild }) => (
-        <div ref={registerChild as React.LegacyRef<HTMLDivElement>} style={style}>
-          {children}
-        </div>
-      )}
-    </CellMeasurer>
-  ),
-);
+const MeasuredRow: FC<MeasuredRowProps> = memo(({ cache, rowKey, parent, index, style, children }) => (
+  <CellMeasurer cache={cache} columnIndex={0} key={rowKey} parent={parent} rowIndex={index}>
+    {({ registerChild }) => (
+      <div ref={registerChild as React.LegacyRef<HTMLDivElement>} style={style}>
+        {children}
+      </div>
+    )}
+  </CellMeasurer>
+));
 
 MeasuredRow.displayName = 'MeasuredRow';
 
@@ -76,13 +73,17 @@ interface ChatsHeaderProps {
   onToggle: () => void;
 }
 
-/** Collapsible header for the Chats section */
 const ChatsHeader: FC<ChatsHeaderProps> = memo(({ isExpanded, onToggle }) => {
   const localize = useLocalize();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
+
   return (
     <button
       onClick={onToggle}
-      className="group flex w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-text-secondary outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
+      className={cn(
+        'group flex w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-text-secondary outline-none transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white',
+        chatLayoutStyle === 'claude' && 'chat-history-toggle',
+      )}
       type="button"
     >
       <span className="select-none">{localize('com_ui_chats')}</span>
@@ -99,7 +100,7 @@ const DateLabel: FC<{ groupName: string; isFirst?: boolean }> = memo(({ groupNam
   const localize = useLocalize();
   return (
     <h2
-      className={cn('pl-1 pt-1 text-text-secondary', isFirst === true ? 'mt-0' : 'mt-2')}
+      className={cn('chat-history-date-label pl-1 pt-1 text-text-secondary', isFirst === true ? 'mt-0' : 'mt-2')}
       style={{ fontSize: '0.7rem' }}
     >
       {localize(groupName as TranslationKeys) || groupName}
@@ -164,15 +165,14 @@ const Conversations: FC<ConversationsProps> = ({
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const convoHeight = isSmallScreen ? 44 : 34;
   const showAgentMarketplace = useShowMarketplace();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
-  // Fetch active job IDs for showing generation indicators
   const { data: activeJobsData } = useActiveJobs();
   const activeJobIds = useMemo(
     () => new Set(activeJobsData?.activeJobIds ?? []),
     [activeJobsData?.activeJobIds],
   );
 
-  // Determine if FavoritesList will render content
   const shouldShowFavorites =
     !search.query && (isFavoritesLoading || favorites.length > 0 || showAgentMarketplace);
 
@@ -188,7 +188,6 @@ const Conversations: FC<ConversationsProps> = ({
 
   const flattenedItems = useMemo(() => {
     const items: FlattenedItem[] = [];
-    // Only include favorites row if FavoritesList will render content
     if (shouldShowFavorites) {
       items.push({ type: 'favorites' });
     }
@@ -201,17 +200,15 @@ const Conversations: FC<ConversationsProps> = ({
       });
 
       if (isLoading) {
-        items.push({ type: 'loading' } as any);
+        items.push({ type: 'loading' } as const);
       }
     }
     return items;
   }, [groupedConversations, isLoading, isChatsExpanded, shouldShowFavorites]);
 
-  // Store flattenedItems in a ref for keyMapper to access without recreating cache
   const flattenedItemsRef = useRef(flattenedItems);
   flattenedItemsRef.current = flattenedItems;
 
-  // Create a stable cache that doesn't depend on flattenedItems
   const cache = useMemo(
     () =>
       new CellMeasurerCache({
@@ -243,7 +240,6 @@ const Conversations: FC<ConversationsProps> = ({
     [convoHeight],
   );
 
-  // Debounced function to clear cache and recompute heights
   const clearFavoritesCache = useCallback(() => {
     if (cache) {
       cache.clear(0, 0);
@@ -253,7 +249,6 @@ const Conversations: FC<ConversationsProps> = ({
     }
   }, [cache, containerRef]);
 
-  // Clear cache when favorites change
   useEffect(() => {
     const frameId = requestAnimationFrame(() => {
       clearFavoritesCache();
@@ -298,9 +293,6 @@ const Conversations: FC<ConversationsProps> = ({
       }
 
       if (item.type === 'header') {
-        // First date header index depends on whether favorites row is included
-        // With favorites: [favorites, chats-header, first-header] → index 2
-        // Without favorites: [chats-header, first-header] → index 1
         const firstHeaderIndex = shouldShowFavorites ? 2 : 1;
         return (
           <MeasuredRow key={key} {...rowProps}>
@@ -359,7 +351,12 @@ const Conversations: FC<ConversationsProps> = ({
   );
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col pb-2 text-sm text-text-primary">
+    <div
+      className={cn(
+        'relative flex h-full min-h-0 flex-col pb-2 text-sm text-text-primary',
+        chatLayoutStyle === 'claude' && 'chat-history-list',
+      )}
+    >
       {isSearchLoading ? (
         <div className="flex flex-1 items-center justify-center">
           <Spinner className="text-text-primary" />

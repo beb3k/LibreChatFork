@@ -53,6 +53,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const automaticPlayback = useRecoilValue(store.automaticPlayback);
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const isTemporary = useRecoilValue(store.isTemporary);
 
   const [badges, setBadges] = useRecoilState(store.chatBadges);
@@ -107,7 +108,6 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   );
 
   const handleContainerClick = useCallback(() => {
-    /** Check if the device is a touchscreen */
     if (window.matchMedia?.('(pointer: coarse)').matches) {
       return;
     }
@@ -194,11 +194,12 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
   const baseClasses = useMemo(
     () =>
       cn(
-        'md:py-3.5 m-0 w-full resize-none py-[13px] placeholder-black/50 bg-transparent dark:placeholder-white/50 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
+        'md:py-3.5 m-0 w-full resize-none py-[13px] bg-transparent placeholder-black/50 transition-[max-height] duration-200 dark:placeholder-white/50 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
+        chatLayoutStyle === 'claude' && 'chat-composer-textarea',
       ),
-    [isCollapsed, isMoreThanThreeRows],
+    [chatLayoutStyle, isCollapsed, isMoreThanThreeRows],
   );
 
   return (
@@ -206,7 +207,11 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
       onSubmit={methods.handleSubmit(submitMessage)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
-        maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
+        chatLayoutStyle === 'claude'
+          ? 'max-w-[48rem]'
+          : maximizeChatSpace
+            ? 'max-w-full'
+            : 'md:max-w-3xl xl:max-w-4xl',
         centerFormOnLanding &&
           (conversationId == null || conversationId === Constants.NEW_CONVO) &&
           !isSubmitting &&
@@ -240,15 +245,22 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
           <div
             onClick={handleContainerClick}
             className={cn(
-              'relative flex w-full flex-grow flex-col overflow-hidden rounded-t-3xl border pb-4 text-text-primary transition-all duration-200 sm:rounded-3xl sm:pb-0',
-              isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
-              isTemporary
-                ? 'border-violet-800/60 bg-violet-950/10'
-                : 'border-border-light bg-surface-chat',
+              'chat-composer-card relative flex w-full flex-grow flex-col overflow-hidden border pb-4 text-text-primary transition-all duration-200',
+              chatLayoutStyle === 'claude'
+                ? 'rounded-[28px] border-border-light bg-surface-chat sm:pb-1'
+                : 'rounded-t-3xl border-border-light bg-surface-chat sm:rounded-3xl sm:pb-0',
+              isTextAreaFocused
+                ? chatLayoutStyle === 'claude'
+                  ? 'shadow-[0_18px_40px_rgba(98,74,52,0.12)]'
+                  : 'shadow-lg'
+                : chatLayoutStyle === 'claude'
+                  ? 'shadow-[0_10px_30px_rgba(98,74,52,0.08)]'
+                  : 'shadow-md',
+              isTemporary && 'border-violet-800/60 bg-violet-950/10',
             )}
+            data-chat-composer={chatLayoutStyle}
           >
             <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
-            {/* WIP */}
             <EditBadges
               isEditingChatBadges={isEditingBadges}
               handleCancelBadges={handleCancelBadges}
@@ -297,7 +309,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                     className={cn(
                       baseClasses,
                       removeFocusRings,
-                      'scrollbar-hover transition-[max-height] duration-200 disabled:cursor-not-allowed',
+                      'scrollbar-hover disabled:cursor-not-allowed',
                     )}
                   />
                 </div>
@@ -327,9 +339,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 conversationId={conversationId}
                 specName={conversation?.spec}
                 onChange={setBadges}
-                isInChat={
-                  Array.isArray(conversation?.messages) && conversation.messages.length >= 1
-                }
+                isInChat={Array.isArray(conversation?.messages) && conversation.messages.length >= 1}
               />
               <div className="mx-auto flex" />
               {SpeechToText && (

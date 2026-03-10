@@ -33,6 +33,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
   const fileMap = useFileMapContext();
 
@@ -51,9 +52,6 @@ function ChatView({ index = 0 }: { index?: number }) {
   const addedChatHelpers = useAddedResponse();
 
   useAdaptiveSSE(rootSubmission, chatHelpers, false, index);
-
-  // Auto-resume if navigating back to conversation with active job
-  // Wait for messages to load before resuming to avoid race condition
   useResumeOnLoad(conversationId, chatHelpers.getMessages, index, !isLoading);
 
   const methods = useForm<ChatFormValues>({
@@ -81,30 +79,38 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation>
-            <div className="relative flex h-full w-full flex-col">
+            <div
+              className={cn(
+                'relative flex h-full w-full flex-col',
+                chatLayoutStyle === 'claude' && 'chat-view-claude',
+              )}
+              data-chat-view-layout={chatLayoutStyle}
+            >
               {!isLoading && <Header />}
-              <>
+              <div
+                className={cn(
+                  'flex flex-col',
+                  isLandingPage
+                    ? 'flex-1 items-center justify-end sm:justify-center'
+                    : 'h-full overflow-y-auto',
+                  chatLayoutStyle === 'claude' && 'chat-layout-stage',
+                )}
+              >
+                {content}
                 <div
                   className={cn(
-                    'flex flex-col',
-                    isLandingPage
-                      ? 'flex-1 items-center justify-end sm:justify-center'
-                      : 'h-full overflow-y-auto',
+                    'w-full chat-layout-composer-shell',
+                    isLandingPage &&
+                      (chatLayoutStyle === 'claude'
+                        ? 'max-w-[48rem] transition-all duration-200'
+                        : 'max-w-3xl transition-all duration-200 xl:max-w-4xl'),
                   )}
                 >
-                  {content}
-                  <div
-                    className={cn(
-                      'w-full',
-                      isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
-                    )}
-                  >
-                    <ChatForm index={index} />
-                    {isLandingPage ? <ConversationStarters /> : <Footer />}
-                  </div>
+                  <ChatForm index={index} />
+                  {isLandingPage ? <ConversationStarters /> : <Footer />}
                 </div>
-                {isLandingPage && <Footer />}
-              </>
+              </div>
+              {isLandingPage && <Footer />}
             </div>
           </Presentation>
         </AddedChatContext.Provider>

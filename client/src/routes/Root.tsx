@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useRecoilValue } from 'recoil';
 import { useMediaQuery } from '@librechat/client';
 import type { ContextType } from '~/common';
 import {
@@ -21,10 +22,12 @@ import { Nav, MobileNav, NAV_WIDTH } from '~/components/Nav';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
+import store from '~/store';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
   const [bannerHeight, setBannerHeight] = useState(0);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const [navVisible, setNavVisible] = useState(() => {
     const savedNavVisible = localStorage.getItem('navVisible');
     return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
@@ -33,7 +36,6 @@ export default function Root() {
   const { isAuthenticated, logout } = useAuthContext();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
-  // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
 
   const assistantsMap = useAssistantsMap({ isAuthenticated });
@@ -73,7 +75,12 @@ export default function Root() {
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
               <Banner onHeightChange={setBannerHeight} />
-              <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
+              <div
+                className="flex"
+                data-chat-layout={chatLayoutStyle}
+                data-testid="chat-shell"
+                style={{ height: `calc(100dvh - ${bannerHeight}px)` }}
+              >
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
                   <Nav navVisible={navVisible} setNavVisible={setNavVisible} />
                   <div
