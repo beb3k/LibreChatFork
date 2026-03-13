@@ -1,6 +1,8 @@
+import { useRecoilValue } from 'recoil';
 import { TooltipAnchor } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+import store from '~/store';
 
 export default function NavToggle({
   onToggle,
@@ -20,9 +22,18 @@ export default function NavToggle({
   translateX?: boolean;
 }) {
   const localize = useLocalize();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const transition = {
     transition: 'transform 0.3s ease, opacity 0.2s ease',
   };
+  const isClaudeSidePanelToggle = chatLayoutStyle === 'claude' && side === 'right';
+  let toggleOpacity = 0.25;
+  if (isClaudeSidePanelToggle) {
+    toggleOpacity = 0.82;
+  }
+  if (isHovering) {
+    toggleOpacity = 1;
+  }
 
   const rotationDegree = 15;
   const rotation = isHovering || !navVisible ? `${rotationDegree}deg` : '0deg';
@@ -66,18 +77,27 @@ export default function NavToggle({
         onClick={onToggle}
         role="button"
         description={ariaDescription}
-        className="flex items-center justify-center"
+        className={cn(
+          'flex items-center justify-center',
+          isClaudeSidePanelToggle && 'chat-side-panel-toggle',
+        )}
         tabIndex={0}
       >
         <span className="" data-state="closed">
           <div
             className="flex h-[72px] w-8 items-center justify-center"
-            style={{ ...transition, opacity: isHovering ? 1 : 0.25 }}
+            style={{
+              ...transition,
+              opacity: toggleOpacity,
+            }}
           >
             <div className="flex h-6 w-6 flex-col items-center">
               {/* Top bar */}
               <div
-                className="h-3 w-1 rounded-full bg-black dark:bg-white"
+                className={cn(
+                  'h-3 w-1 rounded-full bg-black dark:bg-white',
+                  isClaudeSidePanelToggle && 'chat-side-panel-toggle__bar',
+                )}
                 style={{
                   ...transition,
                   transform: `translateY(0.15rem) rotate(${topBarRotation}) translateZ(0px)`,
@@ -85,7 +105,10 @@ export default function NavToggle({
               />
               {/* Bottom bar */}
               <div
-                className="h-3 w-1 rounded-full bg-black dark:bg-white"
+                className={cn(
+                  'h-3 w-1 rounded-full bg-black dark:bg-white',
+                  isClaudeSidePanelToggle && 'chat-side-panel-toggle__bar',
+                )}
                 style={{
                   ...transition,
                   transform: `translateY(-0.15rem) rotate(${bottomBarRotation}) translateZ(0px)`,

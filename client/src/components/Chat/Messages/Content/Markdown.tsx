@@ -16,6 +16,7 @@ import {
 } from '~/components/MCPUIResource';
 import { Artifact, artifactPlugin } from '~/components/Artifacts/Artifact';
 import { ArtifactProvider, CodeBlockProvider } from '~/Providers';
+import ClaudeThinkingSpinner from '~/components/Chat/ClaudeThinkingSpinner';
 import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 import { langSubset, preprocessLaTeX } from '~/utils';
 import { unicodeCitation } from '~/components/Web';
@@ -29,6 +30,7 @@ type TContentProps = {
 
 const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
   const LaTeXParsing = useRecoilValue<boolean>(store.LaTeXParsing);
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
   const isInitializing = content === '';
 
   const currentContent = useMemo(() => {
@@ -66,9 +68,13 @@ const Markdown = memo(({ content = '', isLatestMessage }: TContentProps) => {
   if (isInitializing) {
     return (
       <div className="absolute">
-        <p className="relative">
-          <span className={isLatestMessage ? 'result-thinking' : ''} />
-        </p>
+        {chatLayoutStyle === 'claude' ? (
+          <ClaudeThinkingSpinner />
+        ) : (
+          <p className="relative">
+            <span className={isLatestMessage ? 'result-thinking' : ''} />
+          </p>
+        )}
       </div>
     );
   }

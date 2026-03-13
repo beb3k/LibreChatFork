@@ -4,6 +4,7 @@ import { useRecoilValue } from 'recoil';
 import type { TMessageContentParts } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useMessageHelpers, useLocalize, useAttachments, useContentMetadata } from '~/hooks';
+import ClaudeThinkingIndicator from '~/components/Chat/ClaudeThinkingIndicator';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
 import ContentParts from './Content/ContentParts';
 import { fontSizeAtom } from '~/store/fontSize';
@@ -77,6 +78,12 @@ export default function Message(props: TMessageProps) {
   );
 
   const { hasParallelContent } = useContentMetadata(message);
+  const showClaudeThinkingIndicator =
+    chatLayoutStyle === 'claude' &&
+    isCreatedByUser !== true &&
+    !hasParallelContent &&
+    !(message?.error ?? false);
+  const showActionRow = !(isLast && isSubmitting);
 
   if (!message) {
     return null;
@@ -95,6 +102,48 @@ export default function Message(props: TMessageProps) {
     return 'md:max-w-[47rem] xl:max-w-[55rem]';
   };
 
+  const actionRow = (
+    <SubRow classes="text-xs">
+      <SiblingSwitch
+        siblingIdx={siblingIdx}
+        siblingCount={siblingCount}
+        setSiblingIdx={setSiblingIdx}
+      />
+      <HoverButtons
+        index={index}
+        isEditing={edit}
+        message={message}
+        enterEdit={enterEdit}
+        isSubmitting={isSubmitting}
+        conversation={conversation ?? null}
+        regenerate={() => regenerateMessage()}
+        copyToClipboard={copyToClipboard}
+        handleContinue={handleContinue}
+        latestMessage={latestMessage}
+        isLast={isLast}
+      />
+    </SubRow>
+  );
+  const contentSection = (
+    <div className="flex max-w-full flex-grow flex-col gap-0">
+      <ContentParts
+        edit={edit}
+        isLast={isLast}
+        enterEdit={enterEdit}
+        siblingIdx={siblingIdx}
+        attachments={attachments}
+        isSubmitting={isSubmitting}
+        searchResults={searchResults}
+        messageId={message.messageId}
+        setSiblingIdx={setSiblingIdx}
+        isCreatedByUser={message.isCreatedByUser}
+        conversationId={conversation?.conversationId}
+        isLatestMessage={messageId === latestMessage?.messageId}
+        content={message.content as Array<TMessageContentParts | undefined>}
+      />
+    </div>
+  );
+
   return (
     <>
       <div
@@ -110,10 +159,15 @@ export default function Message(props: TMessageProps) {
               'message-render group mx-auto flex flex-1 gap-3 transition-all duration-200',
               getChatWidthClass(),
               chatLayoutStyle === 'claude' && 'chat-message-row',
+              chatLayoutStyle === 'claude' &&
+                (isCreatedByUser ? 'chat-message-row-user' : 'chat-message-row-assistant'),
             )}
           >
             {!hasParallelContent && (
-              <div className="relative flex flex-shrink-0 flex-col items-center" data-message-avatar>
+              <div
+                className="relative flex flex-shrink-0 flex-col items-center"
+                data-message-avatar
+              >
                 <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full pt-0.5">
                   <MessageIcon iconData={iconData} assistant={assistant} agent={agent} />
                 </div>
@@ -136,49 +190,21 @@ export default function Message(props: TMessageProps) {
                   {name}
                 </h2>
               )}
-              <div className="flex flex-col gap-1">
-                <div className="flex max-w-full flex-grow flex-col gap-0">
-                  <ContentParts
-                    edit={edit}
-                    isLast={isLast}
-                    enterEdit={enterEdit}
-                    siblingIdx={siblingIdx}
-                    attachments={attachments}
-                    isSubmitting={isSubmitting}
-                    searchResults={searchResults}
-                    messageId={message.messageId}
-                    setSiblingIdx={setSiblingIdx}
-                    isCreatedByUser={message.isCreatedByUser}
-                    conversationId={conversation?.conversationId}
-                    isLatestMessage={messageId === latestMessage?.messageId}
-                    content={message.content as Array<TMessageContentParts | undefined>}
-                  />
+              {showClaudeThinkingIndicator ? (
+                <ClaudeThinkingIndicator
+                  message={message}
+                  conversation={conversation ?? null}
+                  showControls={showActionRow}
+                  controls={actionRow}
+                >
+                  {contentSection}
+                </ClaudeThinkingIndicator>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {contentSection}
+                  {showActionRow ? actionRow : <div className="mt-1 h-[27px] bg-transparent" />}
                 </div>
-                {isLast && isSubmitting ? (
-                  <div className="mt-1 h-[27px] bg-transparent" />
-                ) : (
-                  <SubRow classes="text-xs">
-                    <SiblingSwitch
-                      siblingIdx={siblingIdx}
-                      siblingCount={siblingCount}
-                      setSiblingIdx={setSiblingIdx}
-                    />
-                    <HoverButtons
-                      index={index}
-                      isEditing={edit}
-                      message={message}
-                      enterEdit={enterEdit}
-                      isSubmitting={isSubmitting}
-                      conversation={conversation ?? null}
-                      regenerate={() => regenerateMessage()}
-                      copyToClipboard={copyToClipboard}
-                      handleContinue={handleContinue}
-                      latestMessage={latestMessage}
-                      isLast={isLast}
-                    />
-                  </SubRow>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useRecoilValue } from 'recoil';
 import { type TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
+import ClaudeThinkingIndicator from '~/components/Chat/ClaudeThinkingIndicator';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
 import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
@@ -86,6 +87,12 @@ const MessageRender = memo(
     );
 
     const { hasParallelContent } = useContentMetadata(msg);
+    const showClaudeThinkingIndicator =
+      chatLayoutStyle === 'claude' &&
+      msg?.isCreatedByUser !== true &&
+      !hasParallelContent &&
+      !(msg?.error ?? false);
+    const showActionRow = !(hasNoChildren && effectiveIsSubmitting);
 
     if (!msg) {
       return null;
@@ -104,6 +111,58 @@ const MessageRender = memo(
       return 'md:max-w-[47rem] xl:max-w-[55rem]';
     };
 
+    const actionRow = (
+      <SubRow classes="text-xs">
+        <SiblingSwitch
+          siblingIdx={siblingIdx}
+          siblingCount={siblingCount}
+          setSiblingIdx={setSiblingIdx}
+        />
+        <HoverButtons
+          index={index}
+          isEditing={edit}
+          message={msg}
+          enterEdit={enterEdit}
+          isSubmitting={isSubmitting}
+          conversation={conversation ?? null}
+          regenerate={handleRegenerateMessage}
+          copyToClipboard={copyToClipboard}
+          handleContinue={handleContinue}
+          latestMessage={latestMessage}
+          handleFeedback={handleFeedback}
+          isLast={isLast}
+        />
+      </SubRow>
+    );
+    const contentSection = (
+      <div className="flex max-w-full flex-grow flex-col gap-0">
+        <MessageContext.Provider
+          value={{
+            messageId: msg.messageId,
+            conversationId: conversation?.conversationId,
+            isExpanded: false,
+            isSubmitting: effectiveIsSubmitting,
+            isLatestMessage,
+          }}
+        >
+          <MessageContent
+            ask={ask}
+            edit={edit}
+            isLast={isLast}
+            text={msg.text || ''}
+            message={msg}
+            enterEdit={enterEdit}
+            error={!!(msg.error ?? false)}
+            isSubmitting={effectiveIsSubmitting}
+            unfinished={msg.unfinished ?? false}
+            isCreatedByUser={msg.isCreatedByUser ?? true}
+            siblingIdx={siblingIdx ?? 0}
+            setSiblingIdx={setSiblingIdx ?? (() => ({}))}
+          />
+        </MessageContext.Provider>
+      </div>
+    );
+
     return (
       <div
         id={msg.messageId}
@@ -113,6 +172,8 @@ const MessageRender = memo(
           getChatWidthClass(),
           'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
           chatLayoutStyle === 'claude' && 'chat-message-row',
+          chatLayoutStyle === 'claude' &&
+            (msg.isCreatedByUser ? 'chat-message-row-user' : 'chat-message-row-assistant'),
         )}
       >
         {!hasParallelContent && (
@@ -138,59 +199,21 @@ const MessageRender = memo(
             </h2>
           )}
 
-          <div className="flex flex-col gap-1">
-            <div className="flex max-w-full flex-grow flex-col gap-0">
-              <MessageContext.Provider
-                value={{
-                  messageId: msg.messageId,
-                  conversationId: conversation?.conversationId,
-                  isExpanded: false,
-                  isSubmitting: effectiveIsSubmitting,
-                  isLatestMessage,
-                }}
-              >
-                <MessageContent
-                  ask={ask}
-                  edit={edit}
-                  isLast={isLast}
-                  text={msg.text || ''}
-                  message={msg}
-                  enterEdit={enterEdit}
-                  error={!!(msg.error ?? false)}
-                  isSubmitting={effectiveIsSubmitting}
-                  unfinished={msg.unfinished ?? false}
-                  isCreatedByUser={msg.isCreatedByUser ?? true}
-                  siblingIdx={siblingIdx ?? 0}
-                  setSiblingIdx={setSiblingIdx ?? (() => ({}))}
-                />
-              </MessageContext.Provider>
+          {showClaudeThinkingIndicator ? (
+            <ClaudeThinkingIndicator
+              message={msg}
+              conversation={conversation ?? null}
+              showControls={showActionRow}
+              controls={actionRow}
+            >
+              {contentSection}
+            </ClaudeThinkingIndicator>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {contentSection}
+              {showActionRow ? actionRow : <PlaceholderRow />}
             </div>
-            {hasNoChildren && effectiveIsSubmitting ? (
-              <PlaceholderRow />
-            ) : (
-              <SubRow classes="text-xs">
-                <SiblingSwitch
-                  siblingIdx={siblingIdx}
-                  siblingCount={siblingCount}
-                  setSiblingIdx={setSiblingIdx}
-                />
-                <HoverButtons
-                  index={index}
-                  isEditing={edit}
-                  message={msg}
-                  enterEdit={enterEdit}
-                  isSubmitting={isSubmitting}
-                  conversation={conversation ?? null}
-                  regenerate={handleRegenerateMessage}
-                  copyToClipboard={copyToClipboard}
-                  handleContinue={handleContinue}
-                  latestMessage={latestMessage}
-                  handleFeedback={handleFeedback}
-                  isLast={isLast}
-                />
-              </SubRow>
-            )}
-          </div>
+          )}
         </div>
       </div>
     );

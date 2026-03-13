@@ -202,22 +202,55 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
     [chatLayoutStyle, isCollapsed, isMoreThanThreeRows],
   );
 
+  const formWidthClass = useMemo(() => {
+    if (chatLayoutStyle === 'claude') {
+      return 'max-w-[48rem]';
+    }
+
+    if (maximizeChatSpace) {
+      return 'max-w-full';
+    }
+
+    return 'md:max-w-3xl xl:max-w-4xl';
+  }, [chatLayoutStyle, maximizeChatSpace]);
+
+  const formMarginClass = useMemo(() => {
+    const isNewConversation =
+      (conversationId == null || conversationId === Constants.NEW_CONVO) &&
+      !isSubmitting &&
+      conversation?.messages?.length === 0;
+
+    if (centerFormOnLanding && isNewConversation) {
+      return 'transition-all duration-200 sm:mb-28';
+    }
+
+    return 'sm:mb-10';
+  }, [centerFormOnLanding, conversation?.messages?.length, conversationId, isSubmitting]);
+
+  const composerShadowClass = useMemo(() => {
+    if (chatLayoutStyle === 'claude') {
+      return isTextAreaFocused
+        ? 'shadow-[0_2px_12px_rgba(0,0,0,0.08)]'
+        : 'shadow-[0_2px_12px_rgba(0,0,0,0.04)]';
+    }
+
+    return isTextAreaFocused ? 'shadow-lg' : 'shadow-md';
+  }, [chatLayoutStyle, isTextAreaFocused]);
+
+  const placeholderText = useMemo(
+    () => (chatLayoutStyle === 'claude' ? localize('com_ui_how_can_help') : undefined),
+    [chatLayoutStyle, localize],
+  );
+
+  const hasMessages = Array.isArray(conversation?.messages) && conversation.messages.length >= 1;
+
   return (
     <form
       onSubmit={methods.handleSubmit(submitMessage)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
-        chatLayoutStyle === 'claude'
-          ? 'max-w-[48rem]'
-          : maximizeChatSpace
-            ? 'max-w-full'
-            : 'md:max-w-3xl xl:max-w-4xl',
-        centerFormOnLanding &&
-          (conversationId == null || conversationId === Constants.NEW_CONVO) &&
-          !isSubmitting &&
-          conversation?.messages?.length === 0
-          ? 'transition-all duration-200 sm:mb-28'
-          : 'sm:mb-10',
+        formWidthClass,
+        formMarginClass,
       )}
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">
@@ -247,15 +280,9 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
             className={cn(
               'chat-composer-card relative flex w-full flex-grow flex-col overflow-hidden border pb-4 text-text-primary transition-all duration-200',
               chatLayoutStyle === 'claude'
-                ? 'rounded-[28px] border-border-light bg-surface-chat sm:pb-1'
+                ? 'rounded-[16px] border-border-light bg-surface-chat sm:pb-1'
                 : 'rounded-t-3xl border-border-light bg-surface-chat sm:rounded-3xl sm:pb-0',
-              isTextAreaFocused
-                ? chatLayoutStyle === 'claude'
-                  ? 'shadow-[0_18px_40px_rgba(98,74,52,0.12)]'
-                  : 'shadow-lg'
-                : chatLayoutStyle === 'claude'
-                  ? 'shadow-[0_10px_30px_rgba(98,74,52,0.08)]'
-                  : 'shadow-md',
+              composerShadowClass,
               isTemporary && 'border-violet-800/60 bg-violet-950/10',
             )}
             data-chat-composer={chatLayoutStyle}
@@ -304,6 +331,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                     }}
                     onBlur={setIsTextAreaFocused.bind(null, false)}
                     aria-label={localize('com_ui_message_input')}
+                    placeholder={placeholderText}
                     onClick={handleFocusOrClick}
                     style={{ height: 44, overflowY: 'auto' }}
                     className={cn(
@@ -339,7 +367,7 @@ const ChatForm = memo(({ index = 0 }: { index?: number }) => {
                 conversationId={conversationId}
                 specName={conversation?.spec}
                 onChange={setBadges}
-                isInChat={Array.isArray(conversation?.messages) && conversation.messages.length >= 1}
+                isInChat={hasMessages}
               />
               <div className="mx-auto flex" />
               {SpeechToText && (

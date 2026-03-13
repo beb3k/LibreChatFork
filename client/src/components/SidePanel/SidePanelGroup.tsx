@@ -86,6 +86,15 @@ const SidePanelGroup = memo(
       setMinSize(defaultMinSize);
     }, [isSmallScreen, defaultCollapsed, navCollapsedSize, fullPanelCollapse]);
 
+    useEffect(() => {
+      if (chatLayoutStyle === 'claude') {
+        setFullCollapse(true);
+        setCollapsedSize(0);
+        setMinSize(0);
+        panelRef.current?.collapse();
+      }
+    }, [chatLayoutStyle]);
+
     const minSizeMain = useMemo(() => (artifacts != null ? 15 : 30), [artifacts]);
 
     const handleClosePanel = useCallback(() => {
@@ -145,7 +154,9 @@ const SidePanelGroup = memo(
             />
           )}
         </ResizablePanelGroup>
-        {artifacts != null && isSmallScreen && <div className="fixed inset-0 z-[100]">{artifacts}</div>}
+        {artifacts != null && isSmallScreen && (
+          <div className="fixed inset-0 z-[100]">{artifacts}</div>
+        )}
         {!hideSidePanel && interfaceConfig.sidePanel === true && (
           <button
             onClick={handleClosePanel}

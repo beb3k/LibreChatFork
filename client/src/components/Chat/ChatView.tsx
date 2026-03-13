@@ -16,14 +16,19 @@ import ChatForm from './Input/ChatForm';
 import Landing from './Landing';
 import Header from './Header';
 import Footer from './Footer';
+import ClaudeThinkingSpinner from './ClaudeThinkingSpinner';
 import { cn } from '~/utils';
 import store from '~/store';
 
-function LoadingSpinner() {
+function LoadingSpinner({ isClaude }: { isClaude: boolean }) {
   return (
     <div className="relative flex-1 overflow-hidden overflow-y-auto">
       <div className="relative flex h-full items-center justify-center">
-        <Spinner className="text-text-primary" />
+        {isClaude ? (
+          <ClaudeThinkingSpinner variant="page" />
+        ) : (
+          <Spinner className="text-text-primary" />
+        )}
       </div>
     </div>
   );
@@ -65,9 +70,9 @@ function ChatView({ index = 0 }: { index?: number }) {
   const isNavigating = (!messagesTree || messagesTree.length === 0) && conversationId != null;
 
   if (isLoading && conversationId !== Constants.NEW_CONVO) {
-    content = <LoadingSpinner />;
+    content = <LoadingSpinner isClaude={chatLayoutStyle === 'claude'} />;
   } else if ((isLoading || isNavigating) && !isLandingPage) {
-    content = <LoadingSpinner />;
+    content = <LoadingSpinner isClaude={chatLayoutStyle === 'claude'} />;
   } else if (!isLandingPage) {
     content = <MessagesView messagesTree={messagesTree} />;
   } else {
@@ -99,7 +104,7 @@ function ChatView({ index = 0 }: { index?: number }) {
                 {content}
                 <div
                   className={cn(
-                    'w-full chat-layout-composer-shell',
+                    'chat-layout-composer-shell w-full',
                     isLandingPage &&
                       (chatLayoutStyle === 'claude'
                         ? 'max-w-[48rem] transition-all duration-200'

@@ -45,8 +45,8 @@ export default function Header() {
       className={cn(
         'absolute top-0 z-10 flex w-full items-center justify-between p-2 font-semibold text-text-primary',
         chatLayoutStyle === 'claude'
-          ? 'h-12 bg-gradient-to-b from-presentation via-presentation/85 to-transparent'
-          : 'via-presentation/70 h-14 bg-gradient-to-b from-presentation to-transparent md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 2xl:via-transparent',
+          ? 'via-presentation/85 h-12 bg-gradient-to-b from-presentation to-transparent'
+          : 'via-presentation/70 md:from-presentation/80 md:via-presentation/50 2xl:from-presentation/0 h-14 bg-gradient-to-b from-presentation to-transparent 2xl:via-transparent',
       )}
       data-chat-header={chatLayoutStyle}
     >
@@ -77,10 +77,12 @@ export default function Header() {
               )}
             >
               <ModelSelector startupConfig={startupConfig} />
-              {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
-              {hasAccessToBookmarks === true && <BookmarkMenu />}
-              {hasAccessToMultiConvo === true && <AddMultiConvo />}
-              {isSmallScreen && (
+              {chatLayoutStyle !== 'claude' &&
+                interfaceConfig.presets === true &&
+                interfaceConfig.modelSelect && <PresetsMenu />}
+              {chatLayoutStyle !== 'claude' && hasAccessToBookmarks === true && <BookmarkMenu />}
+              {chatLayoutStyle !== 'claude' && hasAccessToMultiConvo === true && <AddMultiConvo />}
+              {isSmallScreen && chatLayoutStyle !== 'claude' && (
                 <>
                   <ExportAndShareMenu
                     isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
@@ -92,8 +94,8 @@ export default function Header() {
           )}
         </div>
 
-        {!isSmallScreen && (
-          <div className={cn('flex items-center gap-2', chatLayoutStyle === 'claude' && 'gap-1.5')}>
+        {!isSmallScreen && chatLayoutStyle !== 'claude' && (
+          <div className={cn('flex items-center gap-2')}>
             <ExportAndShareMenu
               isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
             />

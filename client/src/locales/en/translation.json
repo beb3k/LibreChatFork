@@ -821,6 +821,12 @@
   "com_ui_close_menu": "Close Menu",
   "com_ui_close_settings": "Close Settings",
   "com_ui_close_var": "Close {{0}}",
+  "com_ui_claude_spinner_intro": "Hi, I'm {{0}}. How can I help you today?",
+  "com_ui_claude_spinner_nudge_1": "That tickles.",
+  "com_ui_claude_spinner_nudge_2": "You're very persistent.",
+  "com_ui_claude_spinner_nudge_3": "I'm trying to focus over here.",
+  "com_ui_claude_spinner_nudge_4": "A little gentler, please.",
+  "com_ui_claude_spinner_nudge_5": "ugh, you can't keep doing that",
   "com_ui_close_window": "Close Window",
   "com_ui_code": "Code",
   "com_ui_collapse": "Collapse",
@@ -1049,6 +1055,7 @@
   "com_ui_handoff_instructions": "Handoff instructions",
   "com_ui_happy_birthday": "It's my 1st birthday!",
   "com_ui_header_format": "Header Format",
+  "com_ui_how_can_help": "How can I help you today?",
   "com_ui_hide": "Hide",
   "com_ui_hide_code": "Hide Code",
   "com_ui_hide_image_details": "Hide Image Details",
@@ -1523,4 +1530,3 @@
   "com_ui_zoom_out": "Zoom out",
   "com_user_message": "You"
 }
-

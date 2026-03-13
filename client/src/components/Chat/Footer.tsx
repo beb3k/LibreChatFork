@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import TagManager from 'react-gtm-module';
+import { useRecoilValue } from 'recoil';
 import { Constants } from 'librechat-data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
+import store from '~/store';
 
 export default function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
   const localize = useLocalize();
+  const chatLayoutStyle = useRecoilValue(store.chatLayoutStyle);
 
   const privacyPolicy = config?.interface?.privacyPolicy;
   const termsOfService = config?.interface?.termsOfService;
@@ -41,6 +44,10 @@ export default function Footer({ className }: { className?: string }) {
       TagManager.initialize(tagManagerArgs);
     }
   }, [config?.analyticsGtmId]);
+
+  if (chatLayoutStyle === 'claude') {
+    return null;
+  }
 
   const mainContentRender = mainContentParts.map((text, index) => (
     <React.Fragment key={`main-content-part-${index}`}>
